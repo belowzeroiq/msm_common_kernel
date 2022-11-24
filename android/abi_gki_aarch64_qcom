@@ -65,6 +65,7 @@
   __bitmap_set
   bitmap_zalloc
   __blk_alloc_disk
+  blkdev_get_by_dev
   blk_cleanup_disk
   blk_cleanup_queue
   blk_execute_rq_nowait
@@ -610,6 +611,7 @@
   drm_framebuffer_remove
   drm_framebuffer_unregister_private
   drm_get_connector_status_name
+  drm_plane_from_index
   drm_is_current_master
   drm_kms_helper_poll_disable
   drm_kms_helper_poll_enable
@@ -1224,6 +1226,7 @@
   mutex_lock_interruptible
   mutex_trylock
   mutex_unlock
+  name_to_dev_t
   neigh_destroy
   neigh_resolve_output
   netdev_alert
