@@ -1445,6 +1445,9 @@ static void arm_smmu_release_device(struct device *dev)
 	if (!fwspec || fwspec->ops != &arm_smmu_ops)
 		return;
 
+	if (!dev_iommu_priv_get(dev))
+		goto priv_err;
+
 	cfg  = dev_iommu_priv_get(dev);
 	smmu = cfg->smmu;
 
@@ -1458,6 +1461,7 @@ static void arm_smmu_release_device(struct device *dev)
 
 	dev_iommu_priv_set(dev, NULL);
 	kfree(cfg);
+priv_err:
 	iommu_fwspec_free(dev);
 }
 
