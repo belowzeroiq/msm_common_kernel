@@ -4239,7 +4239,7 @@ drm_dp_mst_detect_port(struct drm_connector *connector,
 
 	ret = drm_modeset_lock(&mgr->base.lock, ctx);
 	if (ret)
-		goto out;
+		goto fail;
 
 	ret = connector_status_disconnected;
 
@@ -4266,6 +4266,8 @@ drm_dp_mst_detect_port(struct drm_connector *connector,
 		break;
 	}
 out:
+	drm_modeset_unlock(&mgr->base.lock);
+fail:
 	drm_dp_mst_topology_put_port(port);
 	return ret;
 }
