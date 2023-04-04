@@ -509,6 +509,7 @@
   dev_pm_qos_remove_request
   dev_pm_qos_update_request
   dev_pm_qos_update_user_latency_tolerance
+  dev_trans_start
   devres_add
   __devres_alloc_node
   devres_free
@@ -686,6 +687,7 @@
   edac_device_handle_ue_count
   enable_irq
   enable_percpu_irq
+  eth_get_headlen
   ethnl_cable_test_fault_length
   ethnl_cable_test_result
   ethtool_convert_legacy_u32_to_link_mode
@@ -721,6 +723,7 @@
   firmware_request_nowarn
   flow_block_cb_setup_simple
   flow_rule_match_basic
+  flow_rule_match_eth_addrs
   flow_rule_match_ipv4_addrs
   flow_rule_match_ports
   flow_rule_match_vlan
@@ -875,6 +878,8 @@
   hvc_remove
   hwspin_lock_free
   hwspin_lock_request_specific
+  __hw_addr_sync_dev
+  __hw_addr_unsync_dev
   __hwspin_lock_timeout
   __hwspin_unlock
   hypervisor_kobj
@@ -1312,6 +1317,7 @@
   mutex_trylock
   mutex_unlock
   name_to_dev_t
+  ndo_dflt_fdb_add
   neigh_destroy
   neigh_resolve_output
   netdev_alert
@@ -1484,6 +1490,7 @@
   pci_save_state
   pci_set_master
   pci_sriov_configure_simple
+  pci_sriov_set_totalvfs
   pci_store_saved_state
   pci_walk_bus
   pci_write_config_dword
@@ -1661,6 +1668,7 @@
   ptp_clock_index
   ptp_clock_register
   ptp_clock_unregister
+  ptp_find_pin
   putback_movable_pages
   put_device
   put_disk
