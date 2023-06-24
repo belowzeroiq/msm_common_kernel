@@ -300,7 +300,7 @@ struct uvc_processing_unit_descriptor {
 	__u8   bSourceID;
 	__le16 wMaxMultiplier;
 	__u8   bControlSize;
-	__u8   bmControls[2];
+	__u8   bmControls[3];
 	__u8   iProcessing;
 	__u8   bmVideoStandards;
 } __attribute__((__packed__));
