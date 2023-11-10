@@ -396,9 +396,12 @@ static int bigben_probe(struct hid_device *hid,
 		return error;
 	}
 
-	report_list = &hid->report_enum[HID_OUTPUT_REPORT].report_list;
-	bigben->report = list_entry(report_list->next,
-		struct hid_report, list);
+	bigben->report = hid_validate_values(hid, HID_OUTPUT_REPORT, 0, 0, 8);
+	if (!bigben->report) {
+		hid_err(hid, "no output report found\n");
+ 		error = -ENODEV;
+ 		goto error_hw_stop;
+ 	}
 
 	if (list_empty(&hid->inputs)) {
 		hid_err(hid, "no inputs found\n");
