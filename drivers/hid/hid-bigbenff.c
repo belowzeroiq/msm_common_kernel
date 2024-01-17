@@ -371,7 +371,6 @@ static int bigben_probe(struct hid_device *hid,
 {
 	struct bigben_device *bigben;
 	struct hid_input *hidinput;
-	struct list_head *report_list;
 	struct led_classdev *led;
 	char *name;
 	size_t name_sz;
@@ -399,9 +398,9 @@ static int bigben_probe(struct hid_device *hid,
 	bigben->report = hid_validate_values(hid, HID_OUTPUT_REPORT, 0, 0, 8);
 	if (!bigben->report) {
 		hid_err(hid, "no output report found\n");
- 		error = -ENODEV;
- 		goto error_hw_stop;
- 	}
+		error = -ENODEV;
+		goto error_hw_stop;
+	}
 
 	if (list_empty(&hid->inputs)) {
 		hid_err(hid, "no inputs found\n");
