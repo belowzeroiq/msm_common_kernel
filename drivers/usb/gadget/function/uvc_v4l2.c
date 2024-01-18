@@ -58,7 +58,7 @@ static int uvc_v4l2_get_bytesperline(struct uvcg_format *uformat,
 		if (!u)
 			return 0;
 
-		return u->desc.bBitsPerPixel * uframe->frame.uf.wWidth / 8;
+		return u->desc.bBitsPerPixel * uframe->frame.w_width / 8;
 	}
 
 	return 0;
@@ -69,8 +69,8 @@ static int uvc_get_frame_size(struct uvcg_format *uformat,
 {
 	unsigned int bpl = uvc_v4l2_get_bytesperline(uformat, uframe);
 
-	return bpl ? bpl * uframe->frame.uf.wHeight :
-		uframe->frame.uf.dwMaxVideoFrameBufferSize;
+	return bpl ? bpl * uframe->frame.w_height :
+		uframe->frame.dw_max_video_frame_buffer_size;
 }
 
 static struct uvcg_format *find_format_by_index(struct uvc_device *uvc, int index)
@@ -102,7 +102,7 @@ static struct uvcg_frame *find_frame_by_index(struct uvc_device *uvc,
 		if (format->fmt->type != uformat->type)
 			continue;
 		list_for_each_entry(frame, &format->fmt->frames, entry) {
-			if (index == frame->frm->frame.uf.bFrameIndex) {
+			if (index == frame->frm->frame.b_frame_index) {
 				uframe = frame->frm;
 				break;
 			}
@@ -153,8 +153,8 @@ static struct uvcg_frame *find_closest_frame_by_size(struct uvc_device *uvc,
 		list_for_each_entry(frame, &format->fmt->frames, entry) {
 			u16 w, h;
 
-			w = frame->frm->frame.uf.wWidth;
-			h = frame->frm->frame.uf.wHeight;
+			w = frame->frm->frame.w_width;
+			h = frame->frm->frame.w_height;
 
 			d = min(w, rw) * min(h, rh);
 			d = w*h + rw*rh - 2*d;
@@ -198,18 +198,6 @@ uvc_send_response(struct uvc_device *uvc, struct uvc_request_data *data)
 /* --------------------------------------------------------------------------
  * V4L2 ioctls
  */
-
-
-struct uvc_format {
-        u8 bpp;
-        u32 fcc;
-};
-
-static struct uvc_format uvc_formats[] = {
-        { 16, V4L2_PIX_FMT_YUYV  },
-        { 0,  V4L2_PIX_FMT_MJPEG },
-        { 16,  V4L2_PIX_FMT_H264 },
-};
 
 static int
 uvc_v4l2_querycap(struct file *file, void *fh, struct v4l2_capability *cap)
@@ -272,8 +260,8 @@ uvc_v4l2_try_format(struct file *file, void *fh, struct v4l2_format *fmt)
 	if (!uframe)
 		return -EINVAL;
 
-	fmt->fmt.pix.width = uframe->frame.uf.wWidth;
-	fmt->fmt.pix.height = uframe->frame.uf.wHeight;
+	fmt->fmt.pix.width = uframe->frame.w_width;
+	fmt->fmt.pix.height = uframe->frame.w_height;
 	fmt->fmt.pix.field = V4L2_FIELD_NONE;
 	fmt->fmt.pix.bytesperline = uvc_v4l2_get_bytesperline(uformat, uframe);
 	fmt->fmt.pix.sizeimage = uvc_get_frame_size(uformat, uframe);
@@ -290,49 +278,19 @@ uvc_v4l2_set_format(struct file *file, void *fh, struct v4l2_format *fmt)
 	struct video_device *vdev = video_devdata(file);
 	struct uvc_device *uvc = video_get_drvdata(vdev);
 	struct uvc_video *video = &uvc->video;
-	struct uvc_format *format;
-        unsigned int imagesize;
-        unsigned int bpl;
-        unsigned int i;
-//	int ret;
+	int ret;
 
-//	ret = uvc_v4l2_try_format(file, fh, fmt);
-//	if (ret)
-//		return ret;
+	ret = uvc_v4l2_try_format(file, fh, fmt);
+	if (ret)
+		return ret;
 
-	for (i = 0; i < ARRAY_SIZE(uvc_formats); ++i) {
-                format = &uvc_formats[i];
-                if (format->fcc == fmt->fmt.pix.pixelformat)
-                        break;
-        }
+	video->fcc = fmt->fmt.pix.pixelformat;
+	video->bpp = fmt->fmt.pix.bytesperline * 8 / video->width;
+	video->width = fmt->fmt.pix.width;
+	video->height = fmt->fmt.pix.height;
+	video->imagesize = fmt->fmt.pix.sizeimage;
 
-        if (i == ARRAY_SIZE(uvc_formats)) {
-                uvcg_info(&uvc->func, "Unsupported format 0x%08x.\n",
-                          fmt->fmt.pix.pixelformat);
-                return -EINVAL;
-        }
-
-//	video->fcc = fmt->fmt.pix.pixelformat;
-//	video->bpp = fmt->fmt.pix.bytesperline * 8 / video->width;
-//	video->width = fmt->fmt.pix.width;
-//	video->height = fmt->fmt.pix.height;
-//	video->imagesize = fmt->fmt.pix.sizeimage;
-	bpl = format->bpp * fmt->fmt.pix.width / 8;
-        imagesize = bpl ? bpl * fmt->fmt.pix.height : fmt->fmt.pix.sizeimage;
-
-        video->fcc = format->fcc;
-        video->bpp = format->bpp;
-        video->width = fmt->fmt.pix.width;
-        video->height = fmt->fmt.pix.height;
-        video->imagesize = imagesize;
-
-        fmt->fmt.pix.field = V4L2_FIELD_NONE;
-        fmt->fmt.pix.bytesperline = bpl;
-        fmt->fmt.pix.sizeimage = imagesize;
-        fmt->fmt.pix.colorspace = V4L2_COLORSPACE_SRGB;
-        fmt->fmt.pix.priv = 0;
-
-	return 0;
+	return ret;
 }
 
 static int
@@ -350,8 +308,8 @@ uvc_v4l2_enum_frameintervals(struct file *file, void *fh,
 		return -EINVAL;
 
 	list_for_each_entry(frame, &uformat->frames, entry) {
-		if (frame->frm->frame.uf.wWidth == fival->width &&
-		    frame->frm->frame.uf.wHeight == fival->height) {
+		if (frame->frm->frame.w_width == fival->width &&
+		    frame->frm->frame.w_height == fival->height) {
 			uframe = frame->frm;
 			break;
 		}
@@ -359,11 +317,11 @@ uvc_v4l2_enum_frameintervals(struct file *file, void *fh,
 	if (!uframe)
 		return -EINVAL;
 
-	if (fival->index >= uframe->frame.uf.bFrameIntervalType)
+	if (fival->index >= uframe->frame.b_frame_interval_type)
 		return -EINVAL;
 
 	fival->discrete.numerator =
-		uframe->frame.uf.dwFrameInterval[fival->index];
+		uframe->dw_frame_interval[fival->index];
 
 	/* TODO: handle V4L2_FRMIVAL_TYPE_STEPWISE */
 	fival->type = V4L2_FRMIVAL_TYPE_DISCRETE;
@@ -395,8 +353,8 @@ uvc_v4l2_enum_framesizes(struct file *file, void *fh,
 		return -EINVAL;
 
 	fsize->type = V4L2_FRMSIZE_TYPE_DISCRETE;
-	fsize->discrete.width = uframe->frame.uf.wWidth;
-	fsize->discrete.height = uframe->frame.uf.wHeight;
+	fsize->discrete.width = uframe->frame.w_width;
+	fsize->discrete.height = uframe->frame.w_height;
 
 	return 0;
 }
