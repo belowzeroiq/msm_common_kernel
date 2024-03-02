@@ -2754,3 +2754,18 @@
   xsk_tx_release
   xsk_uses_need_wakeup
   zap_vma_ptes
+  __hw_addr_sync_dev
+  __mdiobus_register
+  clk_unregister_fixed_rate
+  genphy_handle_interrupt_no_ack
+  pci_request_regions
+  pcie_capability_read_dword
+  phy_basic_t1_features
+  phy_loopback
+  get_phy_device
+  netdev_features_change
+  pci_prepare_to_sleep
+  phy_device_free
+  phy_device_register
+  phy_lookup_setting
+  phy_restart_aneg
