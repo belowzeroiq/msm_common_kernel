@@ -1694,6 +1694,17 @@ static int __dwc3_stop_active_transfer(struct dwc3_ep *dep, bool force, bool int
 	cmd |= DWC3_DEPCMD_PARAM(dep->resource_index);
 	memset(&params, 0, sizeof(params));
 	ret = dwc3_send_gadget_ep_cmd(dep, cmd, &params);
+    /*
+     * If the End Transfer command was timed out while the device is
+     * not in SETUP phase, it's possible that an incoming Setup packet
+     * may prevent the command's completion. Let's retry when the
+     * ep0state returns to EP0_SETUP_PHASE.
+     */
+    if (ret == -ETIMEDOUT && dep->dwc->ep0state != EP0_SETUP_PHASE) {
+        dep->flags |= DWC3_EP_DELAY_STOP;
+        return 0;
+    }
+
 	WARN_ON_ONCE(ret);
 	dep->resource_index = 0;
 
@@ -1705,6 +1716,7 @@ static int __dwc3_stop_active_transfer(struct dwc3_ep *dep, bool force, bool int
 		dep->flags |= DWC3_EP_END_TRANSFER_PENDING;
 	}
 
+    dep->flags &= ~DWC3_EP_DELAY_STOP;
 	return ret;
 }
 
@@ -3720,9 +3732,11 @@ void dwc3_stop_active_transfer(struct dwc3_ep *dep, bool force,
 	if (dep->number <= 1 && dwc->ep0state != EP0_DATA_PHASE)
 		return;
 
+	if (interrupt && (dep->flags & DWC3_EP_DELAY_STOP))
+		return;
+
 	if (!(dep->flags & DWC3_EP_TRANSFER_STARTED) ||
-	    (dep->flags & DWC3_EP_DELAY_STOP) ||
-	    (dep->flags & DWC3_EP_END_TRANSFER_PENDING))
+			(dep->flags & DWC3_EP_END_TRANSFER_PENDING))
 		return;
 
 	/*
