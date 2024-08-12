@@ -2218,6 +2218,7 @@
   of_platform_populate
   of_property_count_elems_of_size
   of_property_match_string
+  of_property_read_reg
   of_property_read_string
   of_property_read_string_helper
   of_property_read_u32_index
@@ -2276,6 +2277,7 @@
   passthru_features_check
   pci_aer_clear_nonfatal_status
   pci_alloc_irq_vectors_affinity
+  pci_ecam_map_bus
   pci_assign_resource
   pci_bus_type
   pci_clear_master
@@ -2286,6 +2288,7 @@
   pci_dev_put
   pci_disable_device
   pci_disable_msi
+  pci_host_common_probe
   pcie_capability_clear_and_set_word
   pcie_capability_read_dword
   pcie_capability_read_word
